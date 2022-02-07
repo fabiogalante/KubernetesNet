@@ -1,0 +1,42 @@
+dotnet new sln
+dotnet new webapi -o Training -f net5.0 --no-https
+dotnet sln add Training/Training.csproj
+
+dotnet run -p Training\Training.csproj
+
+curl http://localhost:5000/WeatherForecast
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /app
+COPY Training/Training.csproj .
+RUN dotnet restore Training.csproj
+COPY ./Training .
+RUN dotnet build Training.csproj -c Release -o /out
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
+WORKDIR /app
+COPY --from=build /out ./
+ENTRYPOINT ["dotnet", "Training.dll"]
+
+docker build -t training:1.0 .
+
+docker run -p 8001:80 training:1.0 .
+
+curl http://localhost:8001/WeatherForecast
+
+https://faun.pub/how-to-deploy-a-net-5-api-in-a-kubernetes-cluster-53212af6a0e2
+
+kubectl create -f service.yaml
+
+kubectl create -f deployment.yaml
+
+
+
+Horizontal Scaling
+
+
+kubectl scale --replicas=6 deployment/training-deployment
+deployment.apps/training-deployment scaled
+
+
+kubectl delete services training-service
+kubectl delete deployment training-deployment
